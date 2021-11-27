@@ -1,6 +1,9 @@
-/** @file parameters.h
+/** @file dynamic.h
  * 
- * @brief A collection of parameters used to determine how the game functions. 
+ * @brief 
+ * An implementation of dynamic programming to play the game 
+ * "Who Says 20 First". Assumes the other player also plays
+ * optimally.
  *
  * @par       
  * COPYRIGHT NOTICE: (c) 2021 Graham Power.  All rights reserved.
@@ -18,8 +21,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */ 
 
-#ifndef GNP_PARAMS_H		/* prevent circular inclusions */
-#define GNP_PARAMS_H		/* by using protection macros */
+#ifndef GNP_DYNAMICP_H		/* prevent circular inclusions */
+#define GNP_DYNAMICP_H		/* by using protection macros */
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,28 +30,32 @@ extern "C" {
 
 /***************************** Include Files *********************************/
 
-#include <stdint.h>
+#include "parameters.h"
+
+#include "status.h"
+#include "game.h"
 
 /************************** Constant Definitions *****************************/
 
-// Enables game state and non-player state updates in the terminal.
-// Uncomment to remove.
-#define VERBOSE_OUTPUT
+/**************************** Type Definitions *******************************/
 
-// Types of players.
-// Don't change these!
-#define USER    0U
-#define DYNAMIC 1U
+struct Dynamic
+{
+    uint8_t temp;
+};
+typedef struct dynamic *dynamic_t;
 
-// Sets the type of player 1 and 2.
-// Can be any of 'USER', 'DYNAMIC'.
-#define PLAYER1     USER
-#define PLAYER2     DYNAMIC
+/***************** Macros (Inline Functions) Definitions *********************/
+
+/************************** Function Prototypes ******************************/
+
+GStatus Dynamic_Init(Actor_t Actor, dynamic_t Dynamic);
+GStatus Dynamic_Act(game_t game, void *ActorBase);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* GNP_PARAMS_H */
+#endif /* GNP_DYNAMICP_H */
 
 /*** end of file ***/

@@ -18,10 +18,10 @@ LFLAGS =
 OUTPUT	:= output
 
 # define source directory
-SRC		:= src src/game
+SRC		:= src src/game src/ai src/utils
 
 # define include directory
-INCLUDE	:= include include/game
+INCLUDE	:= include include/game include/ai include/utils
 
 # define lib directory
 LIB		:= lib

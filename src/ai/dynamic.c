@@ -1,6 +1,9 @@
-/** @file player.c
+/** @file dynamic.c
  * 
- * @brief A manual player for the game. 
+ * @brief 
+ * An implementation of dynamic programming to play the game 
+ * "Who Says 20 First". Assumes the other player also plays
+ * optimally.
  *
  * @par       
  * COPYRIGHT NOTICE: (c) 2021 Graham Power.  All rights reserved.
@@ -18,7 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */ 
 
-#include "player.h"
+#include "dynamic.h"
 
 /************************** Constant Definitions *****************************/
 
@@ -26,32 +29,40 @@
 
 /************************** Function Prototypes ******************************/
 
+GStatus Dynamic_AI(uint8_t Score, uint8_t MyTurn, uint8_t *Advancement);
+
 /************************** Function Definitions *****************************/
 
-GStatus Player_Init(Actor_t Actor)
+GStatus Dynamic_Init(Actor_t Actor, dynamic_t Dynamic)
 {
-    Actor->Action = Player_Act;
+    Actor->Action = Dynamic_Act;
+    Actor->ActorBase = Dynamic;
 
     return GST_SUCCESS;
 };
 
-GStatus Player_Act(game_t game, void* ActorBase)
+GStatus Dynamic_Act(game_t game, void *ActorBase)
 {
-    GStatus ActionState = GST_INVALID_STATE;    
-    int score = 0;
-    while(ActionState == GST_INVALID_STATE)
-    {
-        printf("Add 1 or 2? : ");
-        fflush(stdout);
-        scanf("%d", &score);
-        ActionState = Game_AdvanceState(game, (uint8_t) score);
-        if (ActionState == GST_INVALID_STATE)
-        {
-            printf("Input Not Allowed, Can Only Be 1 or 2!\n");
-        }
-    }
+    dynamic_t Dynamic = (dynamic_t) ActorBase;
+
+    GStatus ActionState;
+
+    uint8_t Advancement = 1U;
+    Dynamic_AI(game->State, 1U, &Advancement);
+
+    #ifdef VERBOSE_OUTPUT
+    printf("DynamicP AI Adds: %u\n", Advancement);
+    #endif
+    ActionState = Game_AdvanceState(game, Advancement);
 
     return ActionState;
+};
+
+GStatus Dynamic_AI(uint8_t Score, uint8_t MyTurn, uint8_t *Advancement)
+{
+    *Advancement = 1U;
+
+    return GST_SUCCESS;
 };
 
 /*** end of file ***/

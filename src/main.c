@@ -26,16 +26,30 @@
 
 #include "game.h"
 #include "player.h"
+#include "dynamic.h"
 
 /************************** Constant Definitions *****************************/
 
 /**************************** Type Definitions *******************************/
 
-struct Actor player1_s;
-Actor_t player1 = &player1_s;
+#if PLAYER1 == DYNAMIC
+	struct Dynamic player1_d;
+	struct Actor player1_s;
+	Actor_t player1 = &player1_s;
+#else // Default to Player1 being a user
+	struct Actor player1_s;
+	Actor_t player1 = &player1_s;
+#endif
 
-struct Actor player2_s;
-Actor_t player2 = &player2_s;
+#if PLAYER2 == DYNAMIC
+	struct Dynamic player2_d_s;
+	dynamic_t player2_d = &player2_d_s;
+	struct Actor player2_s;
+	Actor_t player2 = &player2_s;
+#else // Default to Player2 being a user
+	struct Actor player2_s;
+	Actor_t player2 = &player2_s;
+#endif
 
 struct game game_s;
 game_t game = &game_s;
@@ -46,8 +60,17 @@ game_t game = &game_s;
 
 int main()
 {
+	#if PLAYER1 == DYNAMIC
+	Dynamic_Init(player1, player1_d);
+	#else
 	Player_Init(player1);
+	#endif
+
+	#if PLAYER2 == DYNAMIC
+	Dynamic_Init(player2, player2_d);
+	#else
 	Player_Init(player2);
+	#endif
 
 	Game_Init(game, player1, player2);
 

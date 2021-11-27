@@ -39,7 +39,7 @@ extern "C" {
 /************************** Function Prototypes ******************************/
 
 GStatus Player_Init(Actor_t Actor);
-GStatus Player_Act(game_t game, void* Actor);
+GStatus Player_Act(game_t game, void* ActorBase);
 
 
 #ifdef __cplusplus
