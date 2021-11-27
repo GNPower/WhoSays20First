@@ -36,12 +36,23 @@ GStatus Game_Init (game_t game, Actor_t player1, Actor_t player2)
     game->Player2 = player2;
     game->PlayerTurn = TURN_PLAYER1;
 
+    #ifdef VERBOSE_OUTPUT
+
+    printf("===== WHO SAY'S 20 FIRST =====\n");
+
+    #endif
+
     return GST_SUCCESS;
 };
 
 GStatus Game_SpinOnce(game_t game)
 {
     GStatus ActionStatus = GST_FAILURE;
+    Game_PrintTurn(game);
+    if (game->State == GAME_WON)
+    {
+        return GST_SUCCESS;
+    }
     if (game->PlayerTurn == TURN_PLAYER1)
     {
         ActionStatus = game->Player1->Action(game, game->Player1->ActorBase);
@@ -52,13 +63,40 @@ GStatus Game_SpinOnce(game_t game)
         ActionStatus = game->Player2->Action(game, game->Player2->ActorBase);
         game->PlayerTurn = TURN_PLAYER1;
     }
+    Game_PrintScore(game);
+
+    return ActionStatus;
+};
+
+GStatus Game_Spin(game_t game)
+{
+    GStatus ActionStatus = Game_SpinOnce(game);
+    while (ActionStatus == GST_SUCCESS)
+    {
+        ActionStatus = Game_SpinOnce(game);
+    }
+
+    #ifdef VERBOSE_OUTPUT
+    if (ActionStatus == GST_GAME_WON)
+    {
+        printf("\n\nGame Over!\n");
+        if (game->PlayerTurn == TURN_PLAYER1)
+        {
+            printf("Player 2 Wins!\n");
+        }
+        else
+        {
+            printf("Player 1 Wins!\n");
+        }
+    }
+    #endif
 
     return ActionStatus;
 };
 
 GStatus Game_AdvanceState(game_t game, uint8_t advancement)
 {
-    if (advancement >= MAX_STATE_ADVANCEMENT || game->State + advancement > MAX_STATE)
+    if (advancement <= 0 || advancement > MAX_STATE_ADVANCEMENT || game->State + advancement > MAX_STATE)
     {
         return GST_INVALID_STATE;
     }
@@ -94,9 +132,27 @@ GStatus Game_IsWon(game_t game, uint8_t *isWon)
     return GST_SUCCESS;
 };
 
+GStatus Game_PrintTurn(game_t game)
+{
+    #ifdef VERBOSE_OUTPUT
+    if (game->PlayerTurn == TURN_PLAYER1)
+    {
+        printf("\n\nTurn: Player 1\n");
+    }
+    else
+    {
+        printf("\n\nTurn: Player 2\n");
+    }
+    #endif
+
+    return GST_SUCCESS;
+};
+
 GStatus Game_PrintScore(game_t game)
 {
-    printf("Current Score: %u", game->State);
+    #ifdef VERBOSE_OUTPUT
+    printf("\nCurrent Score: %u\n", game->State);
+    #endif
 
     return GST_SUCCESS;
 };

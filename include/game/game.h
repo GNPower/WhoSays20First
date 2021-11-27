@@ -27,8 +27,12 @@ extern "C" {
 
 /***************************** Include Files *********************************/
 
-#include <stdint.h>
+#include "parameters.h"
+
+#ifdef VERBOSE_OUTPUT
 #include <stdio.h>
+#endif
+#include <stdint.h>
 
 #include "status.h"
 
@@ -68,9 +72,11 @@ struct Actor {
 
 GStatus Game_Init (game_t game, Actor_t player1, Actor_t player2);
 GStatus Game_SpinOnce(game_t game);
+GStatus Game_Spin(game_t game);
 GStatus Game_AdvanceState(game_t game, uint8_t advancement);
 GStatus Game_GetState(game_t game, uint8_t *state);
 GStatus Game_IsWon(game_t game, uint8_t *isWon);
+GStatus Game_PrintTurn(game_t game);
 GStatus Game_PrintScore(game_t game);
 
 #ifdef __cplusplus

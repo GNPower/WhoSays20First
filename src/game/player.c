@@ -51,7 +51,7 @@ GStatus Player_Act(game_t game, void* Actor)
         }
     }
 
-    return GST_SUCCESS;
+    return ActionState;
 };
 
 /*** end of file ***/
