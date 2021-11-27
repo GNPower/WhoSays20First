@@ -33,7 +33,7 @@ extern "C" {
 
 /*********************** Common statuses 0 - 500 *****************************/
 #define GST_SUCCESS             0L
-#define GST_FAILURE             0L
+#define GST_FAILURE             1L
 
 /***************** Common Components statuses 501 - 1000 *********************/
 

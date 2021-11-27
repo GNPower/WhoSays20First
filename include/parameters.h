@@ -35,6 +35,10 @@ extern "C" {
 // Uncomment to remove.
 #define VERBOSE_OUTPUT
 
+// Enables detailed output about the calculations preformed by non-user players.
+// Uncomment to enable. This will make the terminal output very messy.
+#define TRACE_CALCS
+
 // Types of players.
 // Don't change these!
 #define USER    0U

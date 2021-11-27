@@ -32,6 +32,9 @@ extern "C" {
 
 #include "parameters.h"
 
+#include <math.h>
+#include <stdio.h>
+
 #include "status.h"
 #include "game.h"
 
@@ -43,7 +46,7 @@ struct Dynamic
 {
     uint8_t temp;
 };
-typedef struct dynamic *dynamic_t;
+typedef struct Dynamic *dynamic_t;
 
 /***************** Macros (Inline Functions) Definitions *********************/
 

@@ -31,6 +31,8 @@
 GStatus Game_Init (game_t game, Actor_t player1, Actor_t player2)
 {
     game->State = 0;
+    //DEBUG, REMOVE WHEN FIXED
+    // game->State = 15;
     game->Won = GAME_NOT_WON;
     game->Player1 = player1;
     game->Player2 = player2;
@@ -39,6 +41,7 @@ GStatus Game_Init (game_t game, Actor_t player1, Actor_t player2)
     #ifdef VERBOSE_OUTPUT
 
     printf("===== WHO SAY'S 20 FIRST =====\n");
+    Game_PrintScore(game);
 
     #endif
 
@@ -49,7 +52,7 @@ GStatus Game_SpinOnce(game_t game)
 {
     GStatus ActionStatus = GST_FAILURE;
     Game_PrintTurn(game);
-    if (game->State == GAME_WON)
+    if (game->Won == GAME_WON)
     {
         return GST_SUCCESS;
     }
