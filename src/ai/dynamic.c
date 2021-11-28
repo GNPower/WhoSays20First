@@ -171,6 +171,9 @@ GStatus Dynamic_Reward(hashtable_t table, uint8_t Score, uint8_t Depth, uint8_t 
     GStatus Hashtable_Valid = Hashtable_Get(table, Score, MyTurn, Reward);
     if (Hashtable_Valid == GST_SUCCESS)
     {
+        #ifdef TRACE_CALCS
+        printf("Reward Score (%.5e) -- Using Hashtable Stored Value!\n", *Reward);
+        #endif
         return GST_SUCCESS;
     }
 
