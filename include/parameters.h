@@ -41,8 +41,8 @@ extern "C" {
 
 // Types of players.
 // Don't change these!
-#define USER    0U
-#define DYNAMIC 1U
+#define USER    0U      // A manual player, who will interact with the terminal.
+#define DYNAMIC 1U      // An ai player, who will use dynamic programming to play.
 
 // Sets the type of player 1 and 2.
 // Can be any of 'USER', 'DYNAMIC'.
