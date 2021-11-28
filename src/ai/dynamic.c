@@ -33,24 +33,57 @@ GStatus Dynamic_AI(hashtable_t table, uint8_t Score, uint8_t *Advancement);
 
 /************************** Function Definitions *****************************/
 
+/**
+ * @brief 
+ * Initializes a Dynamic Programming controller Actor. Actors are the
+ * name used for anything capable of making advancements in the game 
+ * state (i.e. adding 1 or 2). This takes in the Actor who will use 
+ * its Dynamic_Act function, the Dynamic type used to store a class-like 
+ * object, and the hashtable to be used.
+ * 
+ * @param Actor The actor who will use Dynamic_Act to advance a game state. 
+ * @param Dynamic The pointer to the dynamic struct, used as a class-like representation.
+ * @param table The hashtable used by this dynamic programming instance.
+ * @return GStatus The success of the initialization.
+ */
 GStatus Dynamic_Init(Actor_t Actor, dynamic_t Dynamic, hashtable_t table)
 {
+    // Set the action the passed in actor uses to Dynamic_Act
     Actor->Action = Dynamic_Act;
 
+    // Initialize and store the hashtable to use
     Hashtable_Init(table);
     Dynamic->table = table;
 
+    // Set the actors base structure to a Dynamic strucure
     Actor->ActorBase = Dynamic;
 
     return GST_SUCCESS;
 };
 
+/**
+ * @brief 
+ * Takes an action of behalf of the Actor that called it. 
+ * This action will calculate the best next move, either 
+ * adding 1 or 2, and take it.
+ * 
+ * @param game The game to take the action in.
+ * @param ActorBase 
+ * The Actors base structure, stores information Dynamic 
+ * Programming instances need to take their actions.
+ * @return GStatus The success of the action.
+ */
 GStatus Dynamic_Act(game_t game, void *ActorBase)
 {
+    // Recover the Dynamic structure from the Actors base structure
     dynamic_t Dynamic = (dynamic_t) ActorBase;
 
+    // Variable to store the result of this action
     GStatus ActionState;
 
+    // Set the default action to add 1, in case there is an error
+    // and then calculate the actual action to take using the 
+    // Dynamic_AI function (bottom of file)
     uint8_t Advancement = 1U;
     Dynamic_AI(Dynamic->table, game->State, &Advancement);
 
@@ -62,11 +95,22 @@ GStatus Dynamic_Act(game_t game, void *ActorBase)
     return ActionState;
 };
 
+/**
+ * @brief Calculates the Reward for being in a state.
+ * 
+ * @param Score The current game score.
+ * @param MyTurn 
+ * Whether or not it is the Dynamic Programming instances turn. 
+ * 1 = Yes, 0 = No.
+ * @param Eval Pointer to an int. Dynamic_Evaluate stores its result here.
+ * @return GStatus The success of the evaluation.
+ */
 GStatus Dynamic_Evaluate(uint8_t Score, uint8_t MyTurn, int *Eval)
 {
-    // printf("Debug evl - s, mt: %u, %u\n", Score, MyTurn);
+    // Status returns GST_SUCCESS if we have just evaluated the last
+    // possible state in the game, GST_FAILURE otherwise
     GStatus FoundEndGame;
-    if (Score > MAX_STATE) // Make sure no one tries to make illegal moves
+    if (Score > MAX_STATE) // Make sure no one tries to make illegal moves (i.e. add beyond 20)
     {
         *Eval = -100;
         FoundEndGame = GST_SUCCESS;
@@ -90,17 +134,35 @@ GStatus Dynamic_Evaluate(uint8_t Score, uint8_t MyTurn, int *Eval)
     return FoundEndGame;
 }
 
+/**
+ * @brief 
+ * Recursively calculates the expected reward for being in this state. 
+ * Given as a sum of discounted rewards of this state and all future 
+ * possible states.
+ * 
+ * @param table The hashtable used to store previously calculated rewards.
+ * @param Score The score of the current game.
+ * @param Depth How many actions ahead we are currently looking.
+ * @param MyTurn 
+ * Whether or not it is the Dynamic Programming instances turn. 
+ * 1 = Yes, 0 = No.
+ * @param Reward Pointer to a float. Dynamic_Reward stores its result here.
+ * @return GStatus Status of the reward calculation.
+ */
 GStatus Dynamic_Reward(hashtable_t table, uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Reward)
 {
+    // Evaluates the score in the current state
     int score = 0;
     GStatus EvalResult = Dynamic_Evaluate(Score, MyTurn, &score);
-    // printf("Debug evl_r st, sc: %u , %d\n", EvalResult, score);
+
+    // If the current state is the last state in the game, return the result directly
     if (EvalResult == GST_SUCCESS)
     {
         *Reward = score;
         return GST_SUCCESS;
     }
 
+    // Variables to store intermediate calculations, the max found reward, and the gamma value.
     float tmp;
     float max;
     float gamma = pow(0.5, Depth);
@@ -112,7 +174,7 @@ GStatus Dynamic_Reward(hashtable_t table, uint8_t Score, uint8_t Depth, uint8_t 
         return GST_SUCCESS;
     }
 
-    if (MyTurn) // Dynamic AI Player
+    if (MyTurn) // Calculate the Reward obtained by us, the Dynamic AI Player
     {
         max = -100000;
         // Calculate for a move of add 1
@@ -128,23 +190,24 @@ GStatus Dynamic_Reward(hashtable_t table, uint8_t Score, uint8_t Depth, uint8_t 
             max = tmp;
         }
     }
-    else // Opponent
+    else // Calculate the Reward obtained by our Opponent
     {
         max = 100000;
         // Calculate for a move of add 1
         Dynamic_Reward(table, Score+1, Depth+1, 1, &tmp);
-        if (tmp < max)
+        if (tmp < max) // Here we want the smallest reward, since a good reward for our opponent is bad for us
         {
             max = tmp;
         }
         // Calculate for a move of add 2
         Dynamic_Reward(table, Score+2, Depth+1, 1, &tmp);
-        if (tmp < max)
+        if (tmp < max) // Here we want the smallest reward, since a good reward for our opponent is bad for us
         {
             max = tmp;
         }
     }
 
+    // Calculate the reward contribution in this state
     *Reward = (gamma*max);
 
     // Store the reward in the Hashtable
@@ -159,8 +222,17 @@ GStatus Dynamic_Reward(hashtable_t table, uint8_t Score, uint8_t Depth, uint8_t 
     return GST_SUCCESS;
 }
 
-
-// Done assuming the other player will also play optimally
+/**
+ * @brief 
+ * Calculates the best possible move to make, given the current 
+ * score of the game. Done assuming the other player will also 
+ * play optimally.
+ * 
+ * @param table The hashtable used to store previously calculated rewards.
+ * @param Score The score of the current game.
+ * @param Advancement Pointer to a uint. Dynamic_AI stores the action to take here.
+ * @return GStatus The Status of the action calculation.
+ */
 GStatus Dynamic_AI(hashtable_t table, uint8_t Score, uint8_t *Advancement)
 {
     // Set the default advancement to 1, just in case an error occurs
@@ -173,12 +245,14 @@ GStatus Dynamic_AI(hashtable_t table, uint8_t Score, uint8_t *Advancement)
     printf("Calculate Add One Reward...\n");
     #endif
 
+    // Calculate the reward that would be obtained if we added 1
     Dynamic_Reward(table, Score+1, 0, 0, &tmp);
 
     #ifdef TRACE_CALCS
     printf("Add One Reward: %.5e\n", tmp);
     #endif
 
+    // If adding one gives us the highest rewards, choose to add 1
     if (tmp > bestMove)
     {
         bestMove = tmp;
@@ -190,12 +264,14 @@ GStatus Dynamic_AI(hashtable_t table, uint8_t Score, uint8_t *Advancement)
     printf("Calculate Add Two Score...\n");
     #endif
 
+    // Calculate the reward that would be obtained if we added 2
     Dynamic_Reward(table, Score+2, 0, 0, &tmp);
 
     #ifdef TRACE_CALCS
     printf("Add Two Reward: %.5e\n", tmp);
     #endif
 
+    // If adding two gives us the highest rewards, choose to add 2
     if (tmp > bestMove)
     {
         bestMove = tmp;
