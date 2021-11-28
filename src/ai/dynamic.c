@@ -29,13 +29,17 @@
 
 /************************** Function Prototypes ******************************/
 
-GStatus Dynamic_AI(uint8_t Score, uint8_t *Advancement);
+GStatus Dynamic_AI(hashtable_t table, uint8_t Score, uint8_t *Advancement);
 
 /************************** Function Definitions *****************************/
 
-GStatus Dynamic_Init(Actor_t Actor, dynamic_t Dynamic)
+GStatus Dynamic_Init(Actor_t Actor, dynamic_t Dynamic, hashtable_t table)
 {
     Actor->Action = Dynamic_Act;
+
+    Hashtable_Init(table);
+    Dynamic->table = table;
+
     Actor->ActorBase = Dynamic;
 
     return GST_SUCCESS;
@@ -48,7 +52,7 @@ GStatus Dynamic_Act(game_t game, void *ActorBase)
     GStatus ActionState;
 
     uint8_t Advancement = 1U;
-    Dynamic_AI(game->State, &Advancement);
+    Dynamic_AI(Dynamic->table, game->State, &Advancement);
 
     #ifdef VERBOSE_OUTPUT
     printf("DynamicP AI Adds: %u\n", Advancement);
@@ -86,7 +90,7 @@ GStatus Dynamic_Evaluate(uint8_t Score, uint8_t MyTurn, int *Eval)
     return FoundEndGame;
 }
 
-GStatus Dynamic_Reward(uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Reward)
+GStatus Dynamic_Reward(hashtable_t table, uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Reward)
 {
     int score = 0;
     GStatus EvalResult = Dynamic_Evaluate(Score, MyTurn, &score);
@@ -101,17 +105,24 @@ GStatus Dynamic_Reward(uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Rewa
     float max;
     float gamma = pow(0.5, Depth);
 
+    // Use the Hashtable stored value, if it exists
+    GStatus Hashtable_Valid = Hashtable_Get(table, Score, MyTurn, Reward);
+    if (Hashtable_Valid == GST_SUCCESS)
+    {
+        return GST_SUCCESS;
+    }
+
     if (MyTurn) // Dynamic AI Player
     {
         max = -100000;
         // Calculate for a move of add 1
-        Dynamic_Reward(Score+1, Depth+1, 0, &tmp);
+        Dynamic_Reward(table, Score+1, Depth+1, 0, &tmp);
         if (tmp > max)
         {
             max = tmp;
         }
         // Calculate for a move of add 2
-        Dynamic_Reward(Score+2, Depth+1, 0, &tmp);
+        Dynamic_Reward(table, Score+2, Depth+1, 0, &tmp);
         if (tmp > max)
         {
             max = tmp;
@@ -121,13 +132,13 @@ GStatus Dynamic_Reward(uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Rewa
     {
         max = 100000;
         // Calculate for a move of add 1
-        Dynamic_Reward(Score+1, Depth+1, 1, &tmp);
+        Dynamic_Reward(table, Score+1, Depth+1, 1, &tmp);
         if (tmp < max)
         {
             max = tmp;
         }
         // Calculate for a move of add 2
-        Dynamic_Reward(Score+2, Depth+1, 1, &tmp);
+        Dynamic_Reward(table, Score+2, Depth+1, 1, &tmp);
         if (tmp < max)
         {
             max = tmp;
@@ -135,6 +146,9 @@ GStatus Dynamic_Reward(uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Rewa
     }
 
     *Reward = (gamma*max);
+
+    // Store the reward in the Hashtable
+    Hashtable_Put(table, Score, MyTurn, *Reward);
 
     #ifdef TRACE_CALCS
     int i;
@@ -147,7 +161,7 @@ GStatus Dynamic_Reward(uint8_t Score, uint8_t Depth, uint8_t MyTurn, float *Rewa
 
 
 // Done assuming the other player will also play optimally
-GStatus Dynamic_AI(uint8_t Score, uint8_t *Advancement)
+GStatus Dynamic_AI(hashtable_t table, uint8_t Score, uint8_t *Advancement)
 {
     // Set the default advancement to 1, just in case an error occurs
     *Advancement = 1U;
@@ -159,7 +173,7 @@ GStatus Dynamic_AI(uint8_t Score, uint8_t *Advancement)
     printf("Calculate Add One Reward...\n");
     #endif
 
-    Dynamic_Reward(Score+1, 0, 0, &tmp);
+    Dynamic_Reward(table, Score+1, 0, 0, &tmp);
 
     #ifdef TRACE_CALCS
     printf("Add One Reward: %.5e\n", tmp);
@@ -176,7 +190,7 @@ GStatus Dynamic_AI(uint8_t Score, uint8_t *Advancement)
     printf("Calculate Add Two Score...\n");
     #endif
 
-    Dynamic_Reward(Score+2, 0, 0, &tmp);
+    Dynamic_Reward(table, Score+2, 0, 0, &tmp);
 
     #ifdef TRACE_CALCS
     printf("Add Two Reward: %.5e\n", tmp);

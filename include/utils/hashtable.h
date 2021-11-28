@@ -1,9 +1,8 @@
-/** @file dynamic.h
+/** @file hashtable.h
  * 
  * @brief 
- * An implementation of dynamic programming to play the game 
- * "Who Says 20 First". Assumes the other player also plays
- * optimally.
+ * A hashtable to store the results of AI actions. So trees don't
+ * have to be explored more than once
  *
  * @par       
  * COPYRIGHT NOTICE: (c) 2021 Graham Power.  All rights reserved.
@@ -21,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */ 
 
-#ifndef GNP_DYNAMICP_H		/* prevent circular inclusions */
-#define GNP_DYNAMICP_H		/* by using protection macros */
+#ifndef GNP_HASHT_H		/* prevent circular inclusions */
+#define GNP_HASHT_H		/* by using protection macros */
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,36 +29,35 @@ extern "C" {
 
 /***************************** Include Files *********************************/
 
-#include "parameters.h"
-
-#include <math.h>
-#include <stdio.h>
-
 #include "status.h"
-#include "game.h"
-#include "hashtable.h"
+
+#include <stdint.h>
 
 /************************** Constant Definitions *****************************/
 
+#define HASH_MAX_CAPACITY   50U
+
 /**************************** Type Definitions *******************************/
 
-struct Dynamic
+struct hashtable
 {
-    hashtable_t table;
+    float hash_map[HASH_MAX_CAPACITY];
+    uint8_t hash_used[HASH_MAX_CAPACITY];
 };
-typedef struct Dynamic *dynamic_t;
+typedef struct hashtable *hashtable_t;
 
 /***************** Macros (Inline Functions) Definitions *********************/
 
 /************************** Function Prototypes ******************************/
 
-GStatus Dynamic_Init(Actor_t Actor, dynamic_t Dynamic, hashtable_t table);
-GStatus Dynamic_Act(game_t game, void *ActorBase);
+GStatus Hashtable_Init(hashtable_t table);
+GStatus Hashtable_Put(hashtable_t table, uint8_t Score, uint8_t MyTurn, float Reward);
+GStatus Hashtable_Get(hashtable_t table, uint8_t Score, uint8_t MyTurn, float *Reward);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* GNP_DYNAMICP_H */
+#endif /* GNP_HASHT_H */
 
 /*** end of file ***/

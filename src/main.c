@@ -33,7 +33,10 @@
 /**************************** Type Definitions *******************************/
 
 #if PLAYER1 == DYNAMIC
-	struct Dynamic player1_d;
+	struct Dynamic player1_d_s;
+	dynamic_t player1_d = &player1_d_s;
+	struct hashtable player1_ht_s;
+	hashtable_t player1_ht = &player1_ht_s;
 	struct Actor player1_s;
 	Actor_t player1 = &player1_s;
 #else // Default to Player1 being a user
@@ -44,6 +47,8 @@
 #if PLAYER2 == DYNAMIC
 	struct Dynamic player2_d_s;
 	dynamic_t player2_d = &player2_d_s;
+	struct hashtable player2_ht_s;
+	hashtable_t player2_ht = &player2_ht_s;
 	struct Actor player2_s;
 	Actor_t player2 = &player2_s;
 #else // Default to Player2 being a user
@@ -61,13 +66,13 @@ game_t game = &game_s;
 int main()
 {
 	#if PLAYER1 == DYNAMIC
-	Dynamic_Init(player1, player1_d);
+	Dynamic_Init(player1, player1_d, player2_ht);
 	#else
 	Player_Init(player1);
 	#endif
 
 	#if PLAYER2 == DYNAMIC
-	Dynamic_Init(player2, player2_d);
+	Dynamic_Init(player2, player2_d, player2_ht);
 	#else
 	Player_Init(player2);
 	#endif
